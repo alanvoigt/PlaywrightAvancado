@@ -1,0 +1,112 @@
+Claro, vou explicar o código em detalhes. Esse código usa o Playwright para manipular cookies, verificar se eles foram configurados corretamente e interceptar uma requisição para confirmar que o cookie está sendo enviado. Vou dividir a explicação em etapas:
+
+1. Importação dos Módulos Necessários
+typescript
+Copiar código
+import { test, expect } from '@playwright/test';
+Aqui estamos importando test e expect do módulo @playwright/test. test é usado para criar e organizar os testes, e expect serve para asserções, que verificam se o comportamento do código está correto.
+
+2. Definição e Configuração do Cookie
+typescript
+Copiar código
+test('Exemplo de manipulação e verificação de cookies', async ({ page, context }) => {
+  // Define um cookie antes de navegar para a página
+  const cookie = {
+    name: 'example_cookie',          // Nome do cookie
+    value: 'cookie_value',           // Valor do cookie
+    domain: 'example.com',           // Domínio onde o cookie é válido
+    path: '/',                       // Caminho onde o cookie é válido
+    httpOnly: true,                  // Torna o cookie inacessível via JavaScript
+    secure: true,                    // Transmite o cookie apenas por HTTPS
+    sameSite: 'Strict' as 'Strict',  // Previne o envio do cookie para sites externos
+  };
+  
+  await context.addCookies([cookie]);
+O código define um cookie com as seguintes propriedades:
+
+name e value: Nome e valor do cookie.
+domain: Especifica o domínio onde o cookie será válido (neste caso, example.com).
+path: Indica a parte do site onde o cookie será válido (neste caso, /, ou seja, o site inteiro).
+httpOnly: Define que o cookie não pode ser acessado pelo JavaScript no navegador.
+secure: Garante que o cookie será enviado apenas via HTTPS.
+sameSite: Controla como o cookie será enviado em requisições entre sites. Aqui, Strict impede que ele seja enviado em requisições vindas de outros sites.
+O cookie é adicionado ao contexto do navegador (ou seja, a todas as páginas que ele abrir) com context.addCookies([cookie]).
+
+3. Interceptação da Requisição
+typescript
+Copiar código
+  await page.route('https://www.example.com/*', async (route, request) => {
+    const cookies = await context.cookies();
+    console.log('Cookies atuais:', cookies);
+
+    // Verifica se o cookie esperado está presente
+    const exampleCookie = cookies.find(c => c.name === 'example_cookie');
+    if (exampleCookie) {
+      console.log('Cookie example_cookie está presente com valor:', exampleCookie.value);
+    } else {
+      console.log('Cookie example_cookie não foi encontrado.');
+    }
+
+    // Continua a requisição
+    route.continue();
+  });
+Aqui interceptamos todas as requisições para https://www.example.com/* usando page.route(). Esse código:
+
+Recupera todos os cookies do contexto com context.cookies(), e os exibe no console.
+Busca o cookie example_cookie na lista de cookies. Se o cookie for encontrado, o valor dele é exibido no console. Caso contrário, uma mensagem é exibida indicando que o cookie não foi encontrado.
+Continua a requisição interceptada com route.continue(), permitindo que a navegação prossiga normalmente.
+4. Navegação para o Site e Verificação do Cookie Após a Navegação
+typescript
+Copiar código
+  await page.goto('https://www.example.com');
+
+  // Verifica se o cookie está presente após a navegação
+  const cookiesAfterNavigation = await context.cookies();
+  const hasExampleCookie = cookiesAfterNavigation.some(c => c.name === 'example_cookie');
+  console.log('Cookie presente após navegação:', hasExampleCookie);
+
+  // Assertiva para garantir que o cookie existe
+  expect(hasExampleCookie).toBeTruthy();
+});
+Após definir e verificar o cookie na interceptação, o código:
+
+Navega até https://www.example.com com page.goto().
+Verifica a presença do cookie usando context.cookies() novamente e armazena o resultado em hasExampleCookie.
+Exibe no console se o cookie está presente.
+Valida com uma asserção que o cookie existe, usando expect(hasExampleCookie).toBeTruthy(). Se o cookie estiver ausente, a asserção falhará.
+Resumo do Fluxo
+Configuramos um cookie e verificamos que ele está presente usando interceptação.
+Navegamos até a página e garantimos que o cookie é enviado nas requisições.
+Usamos uma asserção para confirmar que o cookie está presente após a navegação, garantindo o comportamento esperado do cookie ao longo do teste.
+Este código demonstra uma aplicação completa do gerenciamento e verificação de cookies no Playwright.
+
+
+
+
+
+
+Você disse:
+e para que serve essa manipulação de cookies?
+O ChatGPT disse:
+ChatGPT
+A manipulação de cookies em testes automatizados serve para várias finalidades, especialmente em testes de aplicações web onde o comportamento depende de configurações, preferências, ou autenticações do usuário. Aqui estão algumas das razões e usos mais comuns:
+
+1. Autenticação de Usuário
+Em testes que precisam simular usuários já autenticados, é comum definir cookies de sessão, que contêm informações de login. Isso evita a necessidade de passar pelo processo de login manualmente em cada teste. Assim, podemos começar diretamente a partir de uma página que requer autenticação.
+2. Persistência de Preferências e Configurações
+Alguns sites usam cookies para lembrar preferências de idioma, tema, ou configurações de layout. Ao manipular esses cookies, podemos simular as preferências do usuário e testar como a aplicação responde a diferentes configurações, garantindo que a interface e as funcionalidades se ajustem corretamente.
+3. Testes de Cenários de Comportamento Condicional
+Sites que mostram diferentes conteúdos ou layouts com base em cookies podem ser testados ao manipular esses cookies diretamente. Por exemplo, alguns sites podem exibir banners específicos ou recomendações personalizadas de acordo com o histórico de navegação, armazenado em cookies. Alterando esses valores, conseguimos simular e verificar se a aplicação está exibindo os conteúdos corretos.
+4. Simulação de Regiões Geográficas e A/B Testing
+Em campanhas de A/B testing ou para testes de localização (região/língua), os cookies são frequentemente usados para determinar qual versão de uma página o usuário verá. Manipular cookies nesses casos permite simular e validar cada variante para garantir que todas as experiências estejam funcionando como esperado.
+5. Testes de Funcionalidade e Segurança
+Manipulando cookies, é possível realizar testes de segurança, como verificar o comportamento da aplicação ao tentar acessar conteúdos com cookies expirados ou inválidos. Também podemos verificar a proteção de cookies httpOnly e secure e simular cenários onde o cookie não deve ser transmitido em certas condições, por exemplo, quando o sameSite está configurado.
+6. Manutenção do Estado Entre Testes
+Para alguns cenários complexos, o estado de um teste pode depender dos dados do usuário armazenados em cookies. Manipulando cookies, conseguimos manter o estado entre testes ou configurar pré-condições específicas que simplificam e aceleram os testes subsequentes.
+Exemplos Práticos
+Imagine que você está testando uma loja online:
+
+Ao definir um cookie de idioma, você pode verificar se a página de produto aparece na língua correta.
+Em um cenário de pagamento, cookies de sessão podem permitir que você vá direto ao checkout sem precisar adicionar um produto ao carrinho em cada teste.
+Benefícios Gerais
+Esses usos tornam os testes mais eficientes, diretos, e, em muitos casos, permitem um nível de controle que seria difícil de alcançar manualmente. A manipulação de cookies é, portanto, uma poderosa ferramenta para garantir que diferentes aspectos da aplicação funcionem de acordo com as especificações e configurações do usuário

@@ -1,0 +1,75 @@
+Fico feliz que tenha funcionado! Vamos agora detalhar o código e explicar como ele se encaixa no contexto do Playwright.
+
+Explicação do Código
+O código que você executou está fazendo a verificação personalizada de texto de um elemento na página usando o Playwright, mas com uma abordagem de "matcher customizado". Vamos explicar cada parte do código:
+
+typescript
+Copiar código
+import { test, expect, Locator } from '@playwright/test';
+Importação do Playwright:
+test: Função fornecida pelo Playwright que cria os testes.
+expect: O mecanismo de asserções do Playwright que é usado para verificar condições em elementos, como garantir que o texto de um elemento seja o esperado.
+Locator: Tipo fornecido pelo Playwright que representa um seletor de elemento na página. Usado para interagir com elementos na página, como clicar ou obter o texto.
+Função Customizada toHaveTextContent
+typescript
+Copiar código
+async function toHaveTextContent(element: Locator, expectedText: string) {
+  const actualText = await element.textContent(); // Obter o conteúdo de texto do elemento
+  if (actualText === expectedText) {  // Comparar o texto atual com o esperado
+    return { pass: true, message: () => `Text content matches: "${expectedText}"` }; // Se o texto coincidir
+  } else {
+    return {
+      pass: false,
+      message: () =>
+        `Expected element text to be "${expectedText}", but got "${actualText}"`, // Se o texto não coincidir
+    };
+  }
+}
+Função Customizada toHaveTextContent:
+Objetivo: A função toHaveTextContent foi criada para fazer uma verificação personalizada do texto de um elemento.
+Parâmetros:
+element: O Locator do Playwright que representa o elemento na página que estamos verificando.
+expectedText: O texto esperado que deve estar presente no elemento.
+Como funciona:
+Primeiro, usamos await element.textContent() para pegar o conteúdo de texto do elemento.
+Depois, comparamos o conteúdo extraído (actualText) com o valor esperado (expectedText).
+Se eles forem iguais, a função retorna { pass: true, message: () => "Text content matches..." }, indicando que a asserção foi bem-sucedida.
+Caso contrário, ela retorna { pass: false, message: () => "Expected element text..." }, indicando falha, com uma mensagem detalhando o que foi esperado e o que foi encontrado.
+O Teste
+typescript
+Copiar código
+test('Custom matcher to check text content', async ({ page }) => {
+  await page.goto('https://example.com'); // Vai para a página de exemplo
+  
+  const element = page.locator('h1'); // Localiza o elemento <h1>
+  
+  const result = await toHaveTextContent(element, 'Example Domain'); // Verifica o conteúdo de texto
+  
+  console.log(result.message()); // Exibe a mensagem no console
+  
+  expect(result.pass).toBe(true); // Verifica se o teste passou
+  expect(result.message()).toBe('Text content matches: "Example Domain"'); // Valida a mensagem de sucesso
+});
+Função test:
+Objetivo: A função test é usada para definir um caso de teste dentro do Playwright. Dentro da função test, a página é manipulada e asserções são feitas.
+Interações:
+await page.goto('https://example.com'): O Playwright navega até a página "https://example.com".
+const element = page.locator('h1'): O Locator é usado para identificar o elemento <h1> na página.
+const result = await toHaveTextContent(element, 'Example Domain'): A função toHaveTextContent é chamada para verificar se o texto do <h1> é igual a "Example Domain".
+console.log(result.message()): A mensagem retornada pela função personalizada toHaveTextContent é exibida no console.
+expect(result.pass).toBe(true): Usamos o expect do Playwright para verificar se o teste foi bem-sucedido.
+expect(result.message()).toBe('Text content matches: "Example Domain"'): Validamos também se a mensagem está correta.
+Como a Prática se Encaixa no Playwright
+No Playwright, o uso de matchers personalizados ou funções personalizadas de verificação não é tão comum quanto no Jest, mas é uma prática perfeitamente válida quando você deseja criar verificações específicas que não são cobertas pelos métodos padrão de asserção.
+
+O Playwright oferece asserções como expect(page).toHaveText(), expect(page).toHaveURL(), e outras, mas em algumas situações você pode querer criar verificações mais personalizadas. Por exemplo:
+
+Quando você deseja verificar o conteúdo de um elemento de uma maneira que não é suportada diretamente pelo Playwright.
+Quando você precisa criar uma mensagem personalizada para facilitar a depuração.
+Para escrever funções reutilizáveis que podem ser usadas em diferentes testes.
+No contexto do Playwright, a prática de escrever matchers personalizados é uma maneira de aumentar a flexibilidade e a clareza dos testes. Embora o Playwright não tenha um mecanismo formal para estender o expect como o Jest, você pode facilmente criar suas próprias funções personalizadas para melhorar a legibilidade e a reusabilidade dos testes.
+
+Conclusão
+No Playwright, a prática de criar matchers personalizados não é diretamente uma característica da biblioteca, mas sim um padrão de design que pode ser útil para personalizar as asserções. Ao escrever funções customizadas como a toHaveTextContent, você pode adaptar o comportamento do seu teste para corresponder às suas necessidades específicas, oferecendo mensagens personalizadas que podem ajudar na depuração.
+
+Se tiver mais alguma dúvida ou quiser explorar outra abordagem, estou à disposição!

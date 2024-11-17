@@ -1,0 +1,80 @@
+xplicação Detalhada
+1. Importação do Playwright Test
+typescript
+Copiar código
+import { test } from '@playwright/test';
+Aqui, estamos importando a função test do módulo @playwright/test. Essa função é utilizada para definir um caso de teste, onde podemos realizar ações na página da web e fazer asserções sobre o comportamento dela.
+2. Extensão do Tipo Global
+typescript
+Copiar código
+declare global {
+  interface Window {
+    __capturedLogs: any[];
+  }
+}
+declare global: Isso permite que você adicione ou modifique tipos globais. No caso, estamos estendendo o tipo Window, que representa o objeto global do navegador (o window), para incluir uma nova propriedade chamada __capturedLogs. Essa propriedade será usada para armazenar as mensagens de log.
+
+__capturedLogs: any[]: A propriedade __capturedLogs é um array que armazenará todas as mensagens capturadas. A utilização de any[] permite que qualquer tipo de dado seja armazenado neste array (geralmente, serão arrays de strings, mas pode ser útil para outros tipos).
+
+3. Definição do Caso de Teste
+typescript
+Copiar código
+test('Capturar mensagens de console.log', async ({ page }) => {
+test('Capturar mensagens de console.log', async ({ page }) => {: Esse comando define um caso de teste. O nome do teste é "Capturar mensagens de console.log". O parâmetro page é o objeto que representa a página da web em que o Playwright irá interagir.
+4. Substituindo o console.log com addInitScript
+typescript
+Copiar código
+await page.addInitScript(() => {
+  window.console.log = (...args) => {
+    window.__capturedLogs = window.__capturedLogs || [];
+    window.__capturedLogs.push(args);
+  };
+});
+addInitScript: Esse método é usado para injetar um script dentro do contexto da página antes que qualquer interação aconteça. O código fornecido será executado no navegador da página.
+
+Substituição do console.log: O objetivo dessa substituição é capturar todas as chamadas ao console.log feitas na página. O código window.console.log = (...args) => { ... } redefine a função console.log. A cada vez que console.log for chamado na página, as mensagens serão armazenadas no array window.__capturedLogs.
+
+window.__capturedLogs = window.__capturedLogs || []: Isso garante que o array __capturedLogs seja inicializado, caso ainda não tenha sido criado, e armazene as mensagens de log.
+
+5. Carregando a Página
+typescript
+Copiar código
+await page.goto('https://example.com');
+page.goto: Esse comando instrui o Playwright a navegar até o URL fornecido. No caso, estamos indo para "https://example.com". Esse é o site onde o teste será realizado.
+6. Executando Códigos JavaScript na Página
+typescript
+Copiar código
+await page.evaluate(() => {
+  console.log('Olá do console!');
+  console.log('Outra mensagem');
+});
+page.evaluate: Esse método executa um código JavaScript dentro do contexto da página. O código passado para evaluate será executado como se fosse uma função JavaScript normal no navegador.
+
+Mensagens no console: Dentro do evaluate, estamos utilizando console.log para gerar duas mensagens: "Olá do console!" e "Outra mensagem". Essas mensagens serão capturadas pelo script que substitui o console.log.
+
+7. Capturando e Imprimindo as Mensagens de Log
+typescript
+Copiar código
+const capturedLogs = await page.evaluate(() => window.__capturedLogs);
+console.log('Mensagens capturadas:', capturedLogs);
+page.evaluate (novamente): Agora estamos executando outro evaluate para acessar a propriedade window.__capturedLogs, que contém as mensagens de log capturadas durante a execução do código JavaScript da página. O valor é retornado e armazenado na variável capturedLogs.
+
+console.log: As mensagens capturadas são então logadas no terminal para visualização.
+
+8. Verificação (Testes)
+typescript
+Copiar código
+if (capturedLogs.includes('Olá do console!')) {
+  console.log('Test Passed: Mensagem "Olá do console!" capturada!');
+}
+Verificando se a mensagem foi capturada: Aqui, estamos verificando se a mensagem "Olá do console!" está presente no array capturedLogs. Se estiver, o teste "passa" e a mensagem "Test Passed: Mensagem "Olá do console!" capturada!" é registrada no terminal.
+9. Captura de Tela
+typescript
+Copiar código
+await page.screenshot({ path: 'example-screenshot.png' });
+page.screenshot: Este comando tira uma captura de tela da página e a salva no arquivo example-screenshot.png. Isso pode ser útil para verificar o estado visual da página após a execução do teste.
+Resumo Geral:
+Este código testa a capacidade de capturar as mensagens do console.log geradas na página durante a execução do teste.
+O addInitScript substitui a função console.log para capturar as mensagens dentro de um array window.__capturedLogs.
+O código interage com a página, gerando mensagens de log, captura essas mensagens e as verifica, além de fazer uma captura de tela da página.
+Esse tipo de teste é útil quando você deseja monitorar ou validar logs específicos gerados pela página durante a execução de um teste automatizado, garantindo que comportamentos esperados estejam ocorrendo corretamente.

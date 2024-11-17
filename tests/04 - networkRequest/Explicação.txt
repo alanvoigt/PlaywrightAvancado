@@ -1,0 +1,26 @@
+test("Intercept network requests", async ({ page }) => { ... }):
+
+Define um teste no Playwright com o nome "Intercept network requests".
+O parâmetro page é fornecido pelo Playwright e é usado para interagir com a página no navegador. Ele permite controlar o carregamento de páginas, fazer interações e também interceptar solicitações de rede.
+await page.route("**", (route) => { ... }):
+
+page.route() é usado para interceptar as requisições de rede feitas pela página durante sua execução.
+O parâmetro "**" indica um curinga que captura todas as requisições de rede, independentemente da URL (ou seja, todas as requisições de rede feitas pela página serão interceptadas).
+O segundo parâmetro é uma função de callback que é chamada sempre que uma requisição de rede é feita. Essa função recebe um objeto route, que representa a requisição de rede e permite interagir com ela.
+console.log(route.request().url());:
+
+Dentro do callback da função route, essa linha imprime a URL da requisição de rede no console. A função route.request() retorna o objeto da requisição, e url() retorna a URL da requisição.
+Isso permite monitorar todas as URLs que estão sendo requisitadas enquanto a página está carregando ou sendo interagida.
+route.continue();:
+
+O método route.continue() permite que a requisição de rede continue normalmente. Ou seja, a requisição será feita de fato, sem qualquer bloqueio ou modificação.
+Se você quiser bloquear ou modificar a requisição, poderia usar outros métodos como route.abort() (para bloquear a requisição) ou route.fulfill() (para responder manualmente à requisição).
+await page.goto("http://todomvc.com");:
+
+Este comando faz o Playwright navegar até o site "http://todomvc.com".
+Durante essa navegação, todas as requisições feitas pela página (como solicitações para carregar recursos, como imagens, arquivos JavaScript, etc.) serão interceptadas pela função configurada em page.route().
+Resumo:
+O código intercepta todas as requisições de rede feitas pela página carregada no Playwright.
+Ele imprime no console a URL de cada requisição.
+As requisições continuam normalmente, sem bloqueio ou modificação.
+No final, ele navega até o site http://todomvc.com, e todas as requisições feitas pela página são capturadas e registradas.
